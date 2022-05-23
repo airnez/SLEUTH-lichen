@@ -95,7 +95,7 @@ static void grw_completion_status (FILE * fp);
 **
 */
 void
-  grw_grow (GRID_P z_ptr, GRID_P land1_ptr)
+grw_grow(GRID_P z_ptr, GRID_P land1_ptr, GRID_P road_state_ptr)
 {
   char func[] = "grw_grow";
   char gif_filename[MAX_FILENAME_LEN];
@@ -151,6 +151,8 @@ void
   {
     proc_SetCurrentYear (igrid_GetUrbanYear (0));
   }
+
+  road_state_ptr = igrid_GetRoadGridPtrByYear(__FILE__, func, __LINE__, proc_GetCurrentYear());
 
 /** D. Donato 8/17/2006 Added to deal with cumulative growth                 **/
   zgrwth_row = (short *)  mem_GetGRZrowptr();
@@ -310,7 +312,9 @@ void
                 &rt,
                 &pop,
                 delta,  /** D.D. 8/29/2006 **/
-                z_ptr);
+                z_ptr,
+				road_state_ptr);
+
     timer_Stop (SPREAD_TOTAL_TIME);
     stats_SetSNG (sng);
     stats_SetSDG (sdg);

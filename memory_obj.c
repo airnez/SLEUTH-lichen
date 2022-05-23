@@ -117,11 +117,11 @@ static GRID_P zgrwthpointer;
 static int bytes2allocateGRC;
 
 static int bytes2allocateRPOcol;
-static short *rporowNum_ptr[15];
-static short *rporowMin_ptr[15];
-static short *rporowMax_ptr[15];
-static int   *rporowIdx_ptr[15];
-static short *rpocol_ptr[15];
+static short *rporowNum_ptr;
+static short *rporowMin_ptr;
+static short *rporowMax_ptr;
+static int   *rporowIdx_ptr;
+static short *rpocol_ptr;
 /**  D.D.  July 28, 2006                                   *******************/
 
 /*****************************************************************************\
@@ -816,34 +816,30 @@ static void
     scen_CloseLog ();
   }
  
-  /** Allocate memory for the Road-Pixel-Only row arrays. **/
+  /** Allocate memory for the Road-Pixel-Only row array. **/
   /** "sizeof(int)" changed to "sizeof(short)" 8/10/2006  **/
-  for (i=0; i<scen_GetRoadDataFileCount(); i++)
-       {
-        rporowNum_ptr[i] = malloc(nrows*sizeof(short));
-        rporowMin_ptr[i] = malloc(nrows*sizeof(short));
-        rporowMax_ptr[i] = malloc(nrows*sizeof(short));
-        rporowIdx_ptr[i] = malloc(nrows*sizeof(int  ));
-            if (
-                rporowNum_ptr[i] == NULL ||
-                rporowMin_ptr[i] == NULL ||
-                rporowMax_ptr[i] == NULL ||
-                rporowIdx_ptr[i] == NULL 
-               )
-            {
-             sprintf (msg_buf, "Unable to allocate %u bytes of memory (RPO row)", 3*nrows*sizeof(short)+nrows*sizeof(int));
-             LOG_ERROR (msg_buf);
-             EXIT (1);
-            }
-            if (scen_GetLogFlag ())
-            {
-             scen_Append2Log ();
-             fprintf (scen_GetLogFP (), "%s %u Allocated %u bytes of memory (RPO row)\n",
-                      __FILE__, __LINE__, 4*nrows*sizeof(short));
-             scen_CloseLog ();
-            }
-       }
- 
+	rporowNum_ptr = malloc(nrows*sizeof(short));
+	rporowMin_ptr = malloc(nrows*sizeof(short));
+	rporowMax_ptr = malloc(nrows*sizeof(short));
+	rporowIdx_ptr = malloc(nrows*sizeof(int  ));
+		if (
+			rporowNum_ptr == NULL ||
+			rporowMin_ptr == NULL ||
+			rporowMax_ptr == NULL ||
+			rporowIdx_ptr == NULL 
+			)
+		{
+			sprintf (msg_buf, "Unable to allocate %u bytes of memory (RPO row)", 3*nrows*sizeof(short)+nrows*sizeof(int));
+			LOG_ERROR (msg_buf);
+			EXIT (1);
+		}
+		if (scen_GetLogFlag ())
+		{
+			scen_Append2Log ();
+			fprintf (scen_GetLogFP (), "%s %u Allocated %u bytes of memory (RPO row)\n",
+					__FILE__, __LINE__, 4*nrows*sizeof(short));
+			scen_CloseLog ();
+		}
 }
 
 /******************************************************************************
@@ -1159,9 +1155,9 @@ short*
 **                road pixels in the row. The argument is the row number.
 */
 short*
-  mem_GetRPOrowptrNum (int i)
+  mem_GetRPOrowptrNum ()
 {
-  return rporowNum_ptr[i];
+  return rporowNum_ptr;
 }
 
 /******************************************************************************
@@ -1176,9 +1172,9 @@ short*
 **                pixel in the row. The argument is the row number.
 */
 short*
-  mem_GetRPOrowptrMin (int i)
+  mem_GetRPOrowptrMin ()
 {
-  return rporowMin_ptr[i];
+  return rporowMin_ptr;
 }
 
 /******************************************************************************
@@ -1193,9 +1189,9 @@ short*
 **                pixel in the row. The argument is the row number.
 */
 short*
-  mem_GetRPOrowptrMax (int i)
+  mem_GetRPOrowptrMax()
 {
-  return rporowMax_ptr[i];
+  return rporowMax_ptr;
 }
 
 /******************************************************************************
@@ -1210,9 +1206,9 @@ short*
 **                This index provides the starting location of columns for this
 **                row in the column array. The argument is the row number.   */
 int*
-  mem_GetRPOrowptrIdx (int i)
+  mem_GetRPOrowptrIdx ()
 {
-  return rporowIdx_ptr[i];
+	return rporowIdx_ptr;
 }
 
 
@@ -1228,9 +1224,9 @@ int*
 **                parameter.
 */
 short*
-  mem_GetRPOcolptr (int i)
+  mem_GetRPOcolptr ()
 {
-  return rpocol_ptr[i];
+  return rpocol_ptr;
 }
 
 /******************************************************************************
@@ -1251,14 +1247,8 @@ void
           column array. */
   
  char func[] = "mem_AllocateRPOcol";
- int i;
-
-  bytes2allocateRPOcol = 0;
-  for (i=0; i<scen_GetRoadDataFileCount(); i++)
-     {
-      bytes2allocateRPOcol = (igrid_GetIGridRoadPixelCountByIndex(i) + 20) * sizeof(short);
-      rpocol_ptr[i] = malloc(bytes2allocateRPOcol);
-     }
+ bytes2allocateRPOcol = (igrid_GetIGridRoadPixelCountByIndex(0) + 20) * sizeof(short);
+ rpocol_ptr = malloc(bytes2allocateRPOcol);
 
 /**  D.D. Code added August 1, 2006                                          ***/
 

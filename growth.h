@@ -19,7 +19,7 @@ char growth_h_sccs_id[] = "@(#)growth.h	1.245	12/4/00";
  * FUNCTION PROTOTYPES
  *
  */
-void grw_grow(GRID_P z_ptr, GRID_P land1_ptr);
+void grw_grow(GRID_P z_ptr, GRID_P land1_ptr, GRID_P road_state_ptr);
 void Growth (int stop_date,
              Classes* landuse_classes,
              Classes* class_indices,

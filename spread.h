@@ -42,7 +42,7 @@ void
               int* rt,
               int* pop,
               GRID_P delta,   /** D.D. 8/29/2006  **/
-              GRID_P z                                     /* IN/OUT */
-              );                       /* MOD    */
+              GRID_P z,                                     /* IN/OUT */
+			  GRID_P road_state_ptr);
 
 #endif

@@ -11,7 +11,7 @@
 **                                                                           **
 *******************************************************************************
 \*****************************************************************************/
-#define PGRID_COUNT 6
+#define PGRID_COUNT 7
 
 /*****************************************************************************\
 *******************************************************************************
@@ -35,6 +35,7 @@ static grid_info delta;
 static grid_info land1;
 static grid_info land2;
 static grid_info cumulate;
+static grid_info road_state;
 
 /******************************************************************************
 *******************************************************************************
@@ -56,6 +57,7 @@ void
   LOG_MEM (fp, &land1, sizeof (grid_info), 1);
   LOG_MEM (fp, &land2, sizeof (grid_info), 1);
   LOG_MEM (fp, &cumulate, sizeof (grid_info), 1);
+  LOG_MEM(fp, &road_state, sizeof(grid_info), 1);
 }
 
 /******************************************************************************
@@ -97,6 +99,7 @@ void
   land1.ptr = mem_GetPGridPtr (func);
   land2.ptr = mem_GetPGridPtr (func);
   cumulate.ptr = mem_GetPGridPtr (func);
+  road_state.ptr = mem_GetPGridPtr(func);
 }
 
 /******************************************************************************
@@ -199,4 +202,21 @@ GRID_P
   pgrid_GetCumulatePtr ()
 {
   return cumulate.ptr;
+}
+
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: pgrid_GetRoadStatePtr
+** PURPOSE:       return pointer to road_state grid
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Tommy E. Cathey of NESC (919)541-1500
+** CREATION DATE: 18/05/2022
+** DESCRIPTION:
+**
+**
+*/
+GRID_P
+pgrid_GetRoadStatePtr()
+{
+	return road_state.ptr;
 }

@@ -55,11 +55,11 @@ GRID_P mem_GetGRZpointer();
 void   mem_SetGRZpointer(GRID_P);
 /* D.D. Added for cumulative growth array - 8/17/2006                */
 
-short *mem_GetRPOrowptrNum (int i);
-short *mem_GetRPOrowptrMin (int i);
-short *mem_GetRPOrowptrMax (int i);
-int   *mem_GetRPOrowptrIdx (int i);
-short *mem_GetRPOcolptr (int i);
+short *mem_GetRPOrowptrNum ();
+short *mem_GetRPOrowptrMin ();
+short *mem_GetRPOrowptrMax ();
+int   *mem_GetRPOrowptrIdx ();
+short *mem_GetRPOcolptr ();
 /**  D.D.  July 28, 2006                                   *******************/
 
 /**  D.D.  Added for road-pixel-only (RPO) column arrays - Aug. 1, 2006    ***/

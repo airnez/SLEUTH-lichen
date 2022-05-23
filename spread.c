@@ -88,10 +88,6 @@ float road_growth_diffusion_coefficient;
 /***                          D.D. July 28, 2006               (Begin)      **/
 /*** "int *" changed to "short *" 8/10/2006                                 **/
 /*** "short *" corrected back to "int *" for rporow_ptrIdx" 8/14/2006       **/
-  static int rpoStatus[15];         /* Indicates whether RPO files have been created for this road grid. */
-  static int rpoIndex;              /* Points to the RPO file-set in use. */
-  static GRID_P rpoList[15];        /* Contains pointers to road grids. */
-  static char rpoInitIndic={'n'};   /* Indicates whether the RPO files have been initialized */
   static short *rporow_ptrNum;
   static short *rporow_ptrMin;
   static short *rporow_ptrMax;
@@ -211,8 +207,6 @@ static COEFF_TYPE
     spr_GetRoadGravValue (COEFF_TYPE rg_coeff);              /* IN    */
 
 /***                          D.D. July 28, 2006               (Begin)      **/
-  static void spr_rpoList_Init(void);
-  static void spr_rpoPopulate(int);
   int max( int, int );
 /*******************          D.D. July 28, 2006      (End)  ******************/
 
@@ -1313,6 +1307,58 @@ static
 
 /******************************************************************************
 *******************************************************************************
+** FUNCTION NAME: spr_rpoPopulate()
+** PURPOSE:       populate the road-pixel-only (RPO) files for a road grid
+** AUTHOR:        David I. Donato
+** PROGRAMMER:    David I. Donato, USGS Eastern Geographic Science Center
+** CREATION DATE: 07/28/2006
+** DESCRIPTION:
+**
+**
+*/
+static void
+spr_rpoPopulate(GRID_P rd_state_ptr)
+{
+	char func[] = "spr_rpoPopulate";
+	int row, col, rowmax, colmax, numpixels, mincol, maxcol, index;
+	FILE *DD01DBG;
+
+	mem_AllocateRPOcol();
+
+	index = 0;
+	rowmax = igrid_GetNumRows();
+	colmax = igrid_GetNumCols();
+	rporow_ptrNum = mem_GetRPOrowptrNum();
+	rporow_ptrMin = mem_GetRPOrowptrMin();
+	rporow_ptrMax = mem_GetRPOrowptrMax();
+	rporow_ptrIdx = mem_GetRPOrowptrIdx();
+	rpocol_ptr = mem_GetRPOcolptr();
+
+	for (row = 0; row < rowmax; row++)
+	{
+		mincol = colmax; maxcol = 0;
+		rporow_ptrNum[row] = 0;
+		rporow_ptrIdx[row] = index;
+		for (col = 0; col < colmax; col++)
+		{
+			if (rd_state_ptr[OFFSET(row, col)] != 0)
+			{
+				rpocol_ptr[index++] = col;
+				if (col < mincol) { mincol = col; }
+				if (col > maxcol) { maxcol = col; }
+				rporow_ptrNum[row]++;
+			}
+		}
+		rporow_ptrMin[row] = mincol;
+		rporow_ptrMax[row] = maxcol;
+	}
+
+	return;
+}
+
+
+/******************************************************************************
+*******************************************************************************
 ** FUNCTION NAME: spr_spread
 ** PURPOSE:       main spread routine
 ** AUTHOR:        Keith Clarke
@@ -1332,7 +1378,8 @@ void
                int *rt,
                int *pop,
                GRID_P delta,     /* D.D. 8/29/2006  */
-               GRID_P z                                      /* IN/OUT */
+               GRID_P z,                                      /* IN/OUT */
+			   GRID_P road_state_ptr
   ) 
 {
   char func[] = "Spread";
@@ -1355,7 +1402,6 @@ void
   COEFF_TYPE breed_coefficient;
   COEFF_TYPE spread_coefficient;
   GRID_P excld;
-  GRID_P roads;
   GRID_P slp;
 /*GRID_P scratch_gif1;  */
   /* D.D. Commented out July 24, 2006 - Now using int growth row and column
@@ -1382,8 +1428,7 @@ void
   scratch_gif3 = mem_GetWGridPtr (__FILE__, func, __LINE__);
   */
   excld = igrid_GetExcludedGridPtr (__FILE__, func, __LINE__);
-  roads = igrid_GetRoadGridPtrByYear (__FILE__, func,
-                                      __LINE__, proc_GetCurrentYear ());
+
   slp = igrid_GetSlopeGridPtr (__FILE__, func, __LINE__);
   FUNC_INIT;
   assert (road_gravity >= 0.0);
@@ -1392,7 +1437,7 @@ void
   assert (spread_coefficient >= 0.0);
   assert (z != NULL);
   assert (excld != NULL);
-  assert (roads != NULL);
+  assert (road_state_ptr != NULL);
   assert (slp != NULL);
 /** D.D. 8/29/2006                     ***
   assert (scratch_gif1 != NULL);
@@ -1443,33 +1488,19 @@ void
                        swght);                               /* OUT    */
 
 /***                          D.D. July 28, 2006               (Begin)       **/
-/***  Call the routine to initialize the array of pointers to road grids.    **/
+/***  Call the routine to initialize the array of pointer to road grids.    **/
 
-  spr_rpoList_Init();  /* Only runs on the first call */
+  spr_rpoPopulate(road_state_ptr);
 
-/*******************          D.D. July 28, 2006      (End)  ******************/
-
-/***                          D.D. July 28, 2006               (Begin)       **/
-/*** Identify the correct files for road pixels. Create files if necessary.  **/
-  for (rpoIndex=0; rpoIndex<scen_GetRoadDataFileCount(); rpoIndex++)
-     {
-      if (rpoList[rpoIndex] == roads)
-           {
-            if (rpoStatus[rpoIndex] == 1) break;
-            spr_rpoPopulate(rpoIndex);
-            break;
-           }
-     }
-  if (rpoStatus[rpoIndex] != 1) 
 /*******************          D.D. July 28, 2006      (End)  ******************/
 
 /***                          D.D. July 28, 2006               (Begin)       **/
 /*** Set the road-pixel-only row pointers for the current road grid.         **/
-  rporow_ptrNum =  mem_GetRPOrowptrNum(rpoIndex);
-  rporow_ptrMin =  mem_GetRPOrowptrMin(rpoIndex);
-  rporow_ptrMax =  mem_GetRPOrowptrMax(rpoIndex);
-  rporow_ptrIdx =  mem_GetRPOrowptrIdx(rpoIndex);
-  rpocol_ptr    =  mem_GetRPOcolptr(rpoIndex);
+  rporow_ptrNum =  mem_GetRPOrowptrNum();
+  rporow_ptrMin =  mem_GetRPOrowptrMin();
+  rporow_ptrMax =  mem_GetRPOrowptrMax();
+  rporow_ptrIdx =  mem_GetRPOrowptrIdx();
+  rpocol_ptr    =  mem_GetRPOcolptr();
 /*******************          D.D. July 28, 2006      (End)  ******************/
 
 /*******************          D.D. Aug. 14, 2006      (End)  ******************/
@@ -1528,7 +1559,7 @@ void
               delta,                                         /* IN/OUT */
               slp,                                           /* IN     */
               excld,                                         /* IN     */
-              roads,                                         /* IN     */
+			  road_state_ptr,                                /* IN/OUT */
               swght,                                         /* IN     */
               rt);                                           /* IN/OUT */
    /* D.D. Changed July 24, 2006 - No longer passing 
@@ -1645,7 +1676,6 @@ void
   mem_SetGRZcount(zgrwth_count);
 /** D. Donato 8/17/2006                                                */
 
-  roads = igrid_GridRelease (__FILE__, func, __LINE__, roads);
   excld = igrid_GridRelease (__FILE__, func, __LINE__, excld);
   slp = igrid_GridRelease (__FILE__, func, __LINE__, slp);
 /** D.D. Following line commented out August 29, 2006                   ***
@@ -1669,82 +1699,7 @@ void
 **
 **
 */
-static void
-   spr_rpoList_Init()
-{ 
-/*** After execution of this function, rpoList[i] is a pointer to the ith  ***
-**** road grid.  The initial status of each rpoList[i] entry is "0" for    ***
-**** "not initialized". The road-search data structures still must be      ***
-**** built for each road grid. They are built as needed.                   **/
 
-  char func[]="spr_rpoList_Init";
-  int i;
-  FILE *DD01DBG;
-
-  if (rpoInitIndic == 'Y') {return;} /* Not necessary to reinitialize */
-
-  mem_AllocateRPOcol(); /* Allocate memory for RPO column arrays. */
-
-  for (i=0; i<scen_GetRoadDataFileCount();i++)
-       {
-        rpoList[i] = igrid_GetRoadGridPtr(__FILE__, func, __LINE__, i);
-        rpoStatus[i] = 0;
-       }
-
-  rpoInitIndic = 'Y';
-
-  return;
-}
-
-/******************************************************************************
-*******************************************************************************
-** FUNCTION NAME: spr_rpoPopulate()
-** PURPOSE:       populate the road-pixel-only (RPO) files for a road grid
-** AUTHOR:        David I. Donato
-** PROGRAMMER:    David I. Donato, USGS Eastern Geographic Science Center
-** CREATION DATE: 07/28/2006
-** DESCRIPTION:
-**
-**
-*/
-static void
-   spr_rpoPopulate(int i)
-{  
-  char func[] = "spr_rpoPopulate";
-  int row, col, rowmax, colmax, numpixels, mincol, maxcol, index;
-  FILE *DD01DBG;
-
-  index = 0;
-  rowmax = igrid_GetNumRows();
-  colmax = igrid_GetNumCols();
-  rporow_ptrNum = mem_GetRPOrowptrNum (i);
-  rporow_ptrMin = mem_GetRPOrowptrMin (i);
-  rporow_ptrMax = mem_GetRPOrowptrMax (i);
-  rporow_ptrIdx = mem_GetRPOrowptrIdx (i);
-  rpocol_ptr    = mem_GetRPOcolptr(i);
-
-  for (row=0; row < rowmax; row++)
-       {
-        mincol = colmax; maxcol = 0;
-        rporow_ptrNum[row] = 0;
-        rporow_ptrIdx[row] = index; 
-        for (col=0; col < colmax; col++)
-             {
-              if (rpoList[i][OFFSET(row,col)] !=0)
-                   {
-                    rpocol_ptr[index++] = col;
-                    if (col < mincol) {mincol = col;}
-                    if (col > maxcol) {maxcol = col;}
-                    rporow_ptrNum[row]++;
-                   }
-             }
-        rporow_ptrMin[row]=mincol;
-        rporow_ptrMax[row]=maxcol;
-       }
-  rpoStatus[i] = 1;
-
-  return;
-}
 
 /******************************************************************************
 *******************************************************************************

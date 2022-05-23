@@ -254,6 +254,7 @@ static
   int total_pixels;
   int num_monte_carlo;
   int *new_indices;
+  GRID_P road_state_ptr;
 
   FUNC_INIT;
   class_slope = trans_GetClassSlope ();
@@ -262,6 +263,7 @@ static
   total_pixels = mem_GetTotalPixels ();
   new_indices = landclass_GetNewIndicesPtr ();
   num_monte_carlo = scen_GetMonteCarloIterations ();
+  road_state_ptr = pgrid_GetRoadStatePtr();
 
   assert (total_pixels > 0);
   assert (land1_ptr != NULL);
@@ -302,7 +304,7 @@ static
      *
      */
     stats_InitUrbanizationAttempts ();
-    grw_grow (z_ptr, land1_ptr);
+    grw_grow (z_ptr, land1_ptr, road_state_ptr);
     if (scen_GetLogFlag ())
     {
       if (scen_GetLogUrbanizationAttemptsFlag ())
