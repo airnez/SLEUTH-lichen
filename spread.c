@@ -1162,6 +1162,50 @@ static
 
 /******************************************************************************
 *******************************************************************************
+** FUNCTION NAME: spr_build_new_road
+** PURPOSE:       creates a new road between two cells
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 05/23/2022
+** DESCRIPTION:
+**
+**
+*/
+
+static void 
+spr_build_new_road(GRID_P road_ptr, int cellRow, int cellCol, int roadRow, int roadCol) {
+	
+	// pick a random road value between half and full existing value
+	PIXEL road_value = (PIXEL) (0.5 + RANDOM_FLOAT/2.0) * road_ptr[OFFSET(roadRow, roadCol)];
+
+	// Bresenham Algorithm
+	int dx = roadRow - cellRow;
+	int dy = roadCol - cellCol;
+	int d = 2 * dy - dx;
+	int incr_e = 2 * dy;
+	int incr_ne = 2 * (dy - dx);
+	int x = cellCol;
+	int y = cellRow;
+	road_ptr[OFFSET(x, y)] = road_value;
+
+	int j = 0;
+	while (x < roadCol-1) { // Should not modify the existing road pixel
+		if (d <= 0) {
+			d += incr_e;
+			x++;
+		}
+		else {
+			d += incr_ne;
+			x++;
+			y++;
+		}
+		road_ptr[OFFSET(x, y)] = road_value;
+	}
+}
+
+
+/******************************************************************************
+*******************************************************************************
 ** FUNCTION NAME: spr_road_search
 ** PURPOSE:       perform road search
 ** AUTHOR:        David I. Donato
@@ -1298,7 +1342,12 @@ static
        }
 
 
-  if ( foundN >= 0 && foundN <= N ) road_found = TRUE; 
+  if (foundN >= 0 && foundN <= N) {
+	  road_found = TRUE;
+	  spr_build_new_road(roads, i_grwth_center, j_grwth_center, foundRow, foundCol);
+  } 
+
+
   (*i_road) = foundRow;  (*j_road) = foundCol;
 
   FUNC_END;
