@@ -1,1 +1,3 @@
 # SLEUTH-lichen
+
+![](demogif.gif)
