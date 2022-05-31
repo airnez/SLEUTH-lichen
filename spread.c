@@ -456,54 +456,25 @@ spr_build_new_road(GRID_P road_ptr, int cellRow, int cellCol, int roadRow, int r
 	PIXEL road_value = road_ptr[OFFSET(roadRow, roadCol)];
 	//PIXEL road_value = 100;
 
-	int x0, x1, y0, y1, dErr, yStep, dX, err, y, roadStatePixelCount;
-	BOOLEAN steep = (abs(roadCol - cellCol) > abs(roadRow - cellRow));
+	int x0, x1, y0, y1, roadStatePixelCount;
+	x0 = cellRow;
+	y0 = cellCol;
+	x1 = roadRow;
+	y1 = roadCol;
 	roadStatePixelCount = pgrid_GetRoadStatePixelCount();
-	if (!steep) {
-		x0 = cellRow;
-		y0 = cellCol;
-		x1 = roadRow;
-		y1 = roadCol;
-	}
-	else {
-		x0 = cellCol;
-		y0 = cellRow;
-		x1 = roadCol;
-		y1 = roadRow;
-	}
-	if (x0 > x1) {
-		int temp;
-		temp = x1;
-		x1 = x0;
-		x0 = temp;
-		temp = y1;
-		y1 = y0;
-		y0 = temp;
-	}
-	dErr = abs(y1 - y0);
-	if (y0 > y1) {
-		yStep = -1;
-	}
-	else {
-		yStep = 1;
-	}
-	dX = x1 - x0;
-	err = dX >> 1;
-	y = y0;
-	for (int x = x0; x <= x1; x++) {
-		if (steep) {
-			road_ptr[OFFSET(x, y)] = road_value;
-			roadStatePixelCount++;
-		}
-		else {
-			road_ptr[OFFSET(x, y)] = road_value;
-			roadStatePixelCount++;
-		}
-		err -= dErr;
-		if (err < 0) {
-			y += yStep;
-			err += dX;
-		}
+
+	// from http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#C
+	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	int err = (dx > dy ? dx : -dy) / 2, e2;
+
+	for (;;) {
+		road_ptr[OFFSET(x0, y0)] = road_value;
+		roadStatePixelCount++;
+		if (x0 == x1 && y0 == y1) break;
+		e2 = err;
+		if (e2 > -dx) { err -= dy; x0 += sx; }
+		if (e2 < dy) { err += dx; y0 += sy; }
 	}
 	pgrid_SetRoadStatePixelCount(roadStatePixelCount);
 	FUNC_END;
