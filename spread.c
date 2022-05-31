@@ -32,6 +32,7 @@
 #include <math.h>
 #include <errno.h>
 #include "igrid_obj.h"
+#include "pgrid_obj.h"
 #include "landclass_obj.h"
 #include "globals.h"
 #include "random.h"
@@ -435,6 +436,81 @@ static void
 
 /******************************************************************************
 *******************************************************************************
+** FUNCTION NAME: spr_build_new_road
+** PURPOSE:       creates a new road between two cells
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 05/23/2022
+** DESCRIPTION:
+**
+**
+*/
+
+static void 
+spr_build_new_road(GRID_P road_ptr, int cellRow, int cellCol, int roadRow, int roadCol) {
+	
+	char func[] = "spr_build_new_road";
+	FUNC_INIT;
+
+	// pick a random road value between half and full existing value
+	PIXEL road_value = road_ptr[OFFSET(roadRow, roadCol)];
+	//PIXEL road_value = 100;
+
+	int x0, x1, y0, y1, dErr, yStep, dX, err, y, roadStatePixelCount;
+	BOOLEAN steep = (abs(roadCol - cellCol) > abs(roadRow - cellRow));
+	roadStatePixelCount = pgrid_GetRoadStatePixelCount();
+	if (!steep) {
+		x0 = cellRow;
+		y0 = cellCol;
+		x1 = roadRow;
+		y1 = roadCol;
+	}
+	else {
+		x0 = cellCol;
+		y0 = cellRow;
+		x1 = roadCol;
+		y1 = roadRow;
+	}
+	if (x0 > x1) {
+		int temp;
+		temp = x1;
+		x1 = x0;
+		x0 = temp;
+		temp = y1;
+		y1 = y0;
+		y0 = temp;
+	}
+	dErr = abs(y1 - y0);
+	if (y0 > y1) {
+		yStep = -1;
+	}
+	else {
+		yStep = 1;
+	}
+	dX = x1 - x0;
+	err = dX >> 1;
+	y = y0;
+	for (int x = x0; x <= x1; x++) {
+		if (steep) {
+			road_ptr[OFFSET(x, y)] = road_value;
+			roadStatePixelCount++;
+		}
+		else {
+			road_ptr[OFFSET(x, y)] = road_value;
+			roadStatePixelCount++;
+		}
+		err -= dErr;
+		if (err < 0) {
+			y += yStep;
+			err += dX;
+		}
+	}
+	pgrid_SetRoadStatePixelCount(roadStatePixelCount);
+	FUNC_END;
+}
+
+/******************************************************************************
+*******************************************************************************
 ** FUNCTION NAME: spr_phase5
 ** PURPOSE:       perform phase 5 growth
 ** AUTHOR:        Keith Clarke
@@ -660,7 +736,7 @@ temp4=RANDOM_FLOAT;
        */
       if (road_found)
       {
-        
+		  spr_build_new_road(roads, (int) growth_row[growth_index], (int) growth_col[growth_index], i_rd_start, j_rd_start);
 		/*VerD*/
 
 		if (aux_diffusion_coeff  >= 0)
@@ -1162,50 +1238,6 @@ static
 
 /******************************************************************************
 *******************************************************************************
-** FUNCTION NAME: spr_build_new_road
-** PURPOSE:       creates a new road between two cells
-** AUTHOR:        Irenee Dubourg
-** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
-** CREATION DATE: 05/23/2022
-** DESCRIPTION:
-**
-**
-*/
-
-static void 
-spr_build_new_road(GRID_P road_ptr, int cellRow, int cellCol, int roadRow, int roadCol) {
-	
-	// pick a random road value between half and full existing value
-	PIXEL road_value = (PIXEL) (0.5 + RANDOM_FLOAT/2.0) * road_ptr[OFFSET(roadRow, roadCol)];
-
-	// Bresenham Algorithm
-	int dx = roadRow - cellRow;
-	int dy = roadCol - cellCol;
-	int d = 2 * dy - dx;
-	int incr_e = 2 * dy;
-	int incr_ne = 2 * (dy - dx);
-	int x = cellCol;
-	int y = cellRow;
-	road_ptr[OFFSET(x, y)] = road_value;
-
-	int j = 0;
-	while (x < roadCol-1) { // Should not modify the existing road pixel
-		if (d <= 0) {
-			d += incr_e;
-			x++;
-		}
-		else {
-			d += incr_ne;
-			x++;
-			y++;
-		}
-		road_ptr[OFFSET(x, y)] = road_value;
-	}
-}
-
-
-/******************************************************************************
-*******************************************************************************
 ** FUNCTION NAME: spr_road_search
 ** PURPOSE:       perform road search
 ** AUTHOR:        David I. Donato
@@ -1344,7 +1376,6 @@ static
 
   if (foundN >= 0 && foundN <= N) {
 	  road_found = TRUE;
-	  spr_build_new_road(roads, i_grwth_center, j_grwth_center, foundRow, foundCol);
   } 
 
 

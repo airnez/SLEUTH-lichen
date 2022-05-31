@@ -36,6 +36,7 @@ static grid_info land1;
 static grid_info land2;
 static grid_info cumulate;
 static grid_info road_state;
+static int road_state_Pixel_count;
 
 /******************************************************************************
 *******************************************************************************
@@ -209,7 +210,7 @@ GRID_P
 ** FUNCTION NAME: pgrid_GetRoadStatePtr
 ** PURPOSE:       return pointer to road_state grid
 ** AUTHOR:        Irenee Dubourg
-** PROGRAMMER:    Tommy E. Cathey of NESC (919)541-1500
+** PROGRAMMER:    Irenee Dubourg
 ** CREATION DATE: 18/05/2022
 ** DESCRIPTION:
 **
@@ -219,4 +220,38 @@ GRID_P
 pgrid_GetRoadStatePtr()
 {
 	return road_state.ptr;
+}
+
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: getRoadStatePixelCount
+** PURPOSE:       returns the road state grid pixel count for RPO allocation
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 18/05/2022
+** DESCRIPTION:
+**
+**
+*/
+int
+pgrid_GetRoadStatePixelCount()
+{
+	return road_state_Pixel_count;
+}
+
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: setRoadStatePixelCount
+** PURPOSE:       sets the road state grid pixel count
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 18/05/2022
+** DESCRIPTION:
+**
+**
+*/
+void
+pgrid_SetRoadStatePixelCount(int count)
+{
+	road_state_Pixel_count = count;
 }

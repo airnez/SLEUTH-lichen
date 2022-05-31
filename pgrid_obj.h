@@ -8,4 +8,6 @@ GRID_P pgrid_GetLand1Ptr();
 GRID_P pgrid_GetLand2Ptr();
 GRID_P pgrid_GetCumulatePtr();
 GRID_P pgrid_GetRoadStatePtr();
+void pgrid_SetRoadStatePixelCount(int count);
+int pgrid_GetRoadStatePixelCount();
 

@@ -1247,7 +1247,7 @@ void
           column array. */
   
  char func[] = "mem_AllocateRPOcol";
- bytes2allocateRPOcol = (igrid_GetIGridRoadPixelCountByIndex(0) + 20) * sizeof(short);
+ bytes2allocateRPOcol = (pgrid_GetRoadStatePixelCount() + 20) * sizeof(short);
  rpocol_ptr = malloc(bytes2allocateRPOcol);
 
 /**  D.D. Code added August 1, 2006                                          ***/
