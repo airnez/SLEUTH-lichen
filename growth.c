@@ -166,18 +166,15 @@ cumulate_roads(GRID_P road_state_ptr)
 
 		if (proc_GetCurrentMonteCarlo() == num_monte_carlo - 1)
 		{
-			if (proc_GetProcessingType() != TESTING)
+			/*
+				*
+				* NORMALIZE ACCULUMLATED GRIDS
+				*
+				*/
+			for (i = 0; i < mem_GetTotalPixels(); i++)
 			{
-				/*
-				 *
-				 * NORMALIZE ACCULUMLATED GRIDS
-				 *
-				 */
-				for (i = 0; i < mem_GetTotalPixels(); i++)
-				{
-					cumulate_road_state[i] =
-						255 * cumulate_road_state[i] / num_monte_carlo;
-				}
+				cumulate_road_state[i] =
+					255 * cumulate_road_state[i] / num_monte_carlo;
 			}
 
 			sprintf(output_gif_filename, "%s%s%s%u.gif",
@@ -285,12 +282,6 @@ grw_grow(GRID_P z_ptr, GRID_P land1_ptr, GRID_P road_state_ptr)
 
   seed_road_ptr = igrid_GetRoadGridPtrByYear(__FILE__, func, __LINE__, proc_GetCurrentYear());
   pgrid_SetRoadStatePixelCount(igrid_GetIGridRoadPixelCount(proc_GetCurrentYear()));
-
-  /*for (row = 0; row < nrows; row++) {
-	  for (col = 0; col < ncols; col++) {
-		  road_state_ptr[OFFSET(row, col)] = seed_ptr[OFFSET(row, col)];
-	  }
-  }*/
 
   util_copy_grid(seed_road_ptr, road_state_ptr);
 
