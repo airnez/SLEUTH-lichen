@@ -85,4 +85,9 @@ void
   util_init_grid (GRID_P gif,                                /* OUT    */
                  PIXEL value                                 /* IN     */
 );
+
+void
+util_output_gif_grid(GRID_P ptr,		/* IN     */
+	char *path				/* IN     */
+);
 #endif

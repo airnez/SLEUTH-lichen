@@ -85,6 +85,136 @@ static void grw_completion_status (FILE * fp);
 
 /******************************************************************************
 *******************************************************************************
+** FUNCTION NAME: cumulate_roads
+** PURPOSE:       routine for handling road accumulation and output
+** AUTHOR:       Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 05/24/2022
+** DESCRIPTION:
+**
+**
+*/
+static void
+cumulate_roads(GRID_P road_state_ptr)
+{
+	char func[] = "cumulate_roads";
+	char command[2 * MAX_FILENAME_LEN + 20];
+	GRID_P workspace;
+	int num_monte_carlo;
+	char road_name[] = "_roads_";
+	char temp_gif_filename[MAX_FILENAME_LEN];
+	char output_gif_filename[MAX_FILENAME_LEN];
+	GRID_P cumulate_road_state;
+	int i;
+
+	FUNC_INIT;
+	workspace = mem_GetWGridPtr(__FILE__, func, __LINE__);
+	num_monte_carlo = scen_GetMonteCarloIterations();
+
+	assert(workspace != NULL);
+	assert(road_state_ptr != NULL);
+	
+	cumulate_road_state = workspace;
+
+	if (proc_GetProcessingType() != CALIBRATING)
+	{
+		if (proc_GetCurrentMonteCarlo() == 0)
+		{
+			/*
+			 *
+			 * ZERO OUT THE ROAD ACCUMULATION GRID
+			 *
+			 */
+
+			util_init_grid(cumulate_road_state, 0);
+		}
+		else
+		{
+			/*
+			 *
+			 * READ IN THE ROAD ACCUMULATION GRID
+			 *
+			 */
+
+			sprintf(temp_gif_filename, "%scumulate_roads.year_%u",
+				scen_GetOutputDir(), proc_GetCurrentYear());
+			inp_slurp(temp_gif_filename,                               /* IN    */
+				cumulate_road_state,                       /* OUT   */
+				memGetBytesPerGridRound());              /* IN    */
+		}
+
+		/*
+		 *
+		 * ACCUMULATE ROADS OVER MONTE CARLOS
+		 *
+		 */
+		sprintf(output_gif_filename, "%s%s%s%u_%u_%u.gif",
+			scen_GetOutputDir(),
+			igrid_GetLocation(),
+			road_name,
+			proc_GetCurrentYear(),
+			proc_GetCurrentMonteCarlo());
+		util_output_gif_grid(road_state_ptr, output_gif_filename);
+
+		for (i = 0; i < mem_GetTotalPixels(); i++)
+		{
+			if (road_state_ptr[i] > 0)
+			{
+				cumulate_road_state[i]++;
+			}
+		}
+
+		if (proc_GetCurrentMonteCarlo() == num_monte_carlo - 1)
+		{
+			if (proc_GetProcessingType() != TESTING)
+			{
+				/*
+				 *
+				 * NORMALIZE ACCULUMLATED GRIDS
+				 *
+				 */
+				for (i = 0; i < mem_GetTotalPixels(); i++)
+				{
+					cumulate_road_state[i] =
+						255 * cumulate_road_state[i] / num_monte_carlo;
+				}
+			}
+
+			sprintf(output_gif_filename, "%s%s%s%u.gif",
+				scen_GetOutputDir(),
+				igrid_GetLocation(),
+				road_name,
+				proc_GetCurrentYear());
+			util_output_gif_grid(cumulate_road_state, output_gif_filename);
+
+
+			if (proc_GetCurrentMonteCarlo() != 0)
+			{
+				sprintf(command, "rm %s", temp_gif_filename);
+				system(command);
+			}
+		}
+		else
+		{
+			/*
+			 *
+			 * DUMP ACCULUMLATED GRIDS TO DISK
+			 *
+			 */
+			sprintf(temp_gif_filename, "%scumulate_roads.year_%u",
+				scen_GetOutputDir(), proc_GetCurrentYear());
+			out_dump(temp_gif_filename,
+				cumulate_road_state,
+				memGetBytesPerGridRound());
+		}
+	}
+
+	workspace = mem_GetWGridFree(__FILE__, func, __LINE__, workspace);
+	FUNC_END;
+}
+
+/******************************************************************************
+*******************************************************************************
 ** FUNCTION NAME: grw_grow
 ** PURPOSE:       loop over simulated years
 ** AUTHOR:        Keith Clarke
@@ -102,6 +232,7 @@ grw_grow(GRID_P z_ptr, GRID_P land1_ptr, GRID_P road_state_ptr)
   char date_str[4];
   GRID_P deltatron_ptr;
   GRID_P seed_ptr;
+  GRID_P seed_road_ptr;
   GRID_P delta;
   int total_pixels;
   float average_slope;
@@ -152,7 +283,16 @@ grw_grow(GRID_P z_ptr, GRID_P land1_ptr, GRID_P road_state_ptr)
     proc_SetCurrentYear (igrid_GetUrbanYear (0));
   }
 
-  util_copy_grid(igrid_GetRoadGridPtrByYear(__FILE__, func, __LINE__, proc_GetCurrentYear()), road_state_ptr);
+  seed_road_ptr = igrid_GetRoadGridPtrByYear(__FILE__, func, __LINE__, proc_GetCurrentYear());
+  pgrid_SetRoadStatePixelCount(igrid_GetIGridRoadPixelCount(proc_GetCurrentYear()));
+
+  /*for (row = 0; row < nrows; row++) {
+	  for (col = 0; col < ncols; col++) {
+		  road_state_ptr[OFFSET(row, col)] = seed_ptr[OFFSET(row, col)];
+	  }
+  }*/
+
+  util_copy_grid(seed_road_ptr, road_state_ptr);
 
 /** D. Donato 8/17/2006 Added to deal with cumulative growth                 **/
   zgrwth_row = (short *)  mem_GetGRZrowptr();
@@ -344,6 +484,9 @@ grw_grow(GRID_P z_ptr, GRID_P land1_ptr, GRID_P road_state_ptr)
     {
       grw_non_landuse (z_ptr);
     }
+
+	cumulate_roads(road_state_ptr);
+
 /** D.D. 8/18/2006 Use the UrbPix  array to condition z_ptr more efficiently. ***
   seed_ptr = igrid_GetUrbanGridPtr (__FILE__, func, __LINE__, 0);
   util_condition_gif (total_pixels,

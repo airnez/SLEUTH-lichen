@@ -939,6 +939,34 @@ void
 
 /******************************************************************************
 *******************************************************************************
+** FUNCTION NAME: util_output_gif_grid
+** PURPOSE:       routine to output any grid
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 05/24/2022
+** DESCRIPTION:
+**
+**
+*/
+void
+util_output_gif_grid(GRID_P ptr, char *path)
+{
+	char func[] = "util_output_gif_grid";
+	char date_str[] = "";
+
+	assert(ptr != NULL);
+	
+	FUNC_INIT;
+	gdif_WriteGIF(ptr,
+		color_GetColortable(GRAYSCALE_COLORTABLE),
+		path,
+		date_str,
+		255);
+	FUNC_END;
+}
+
+/******************************************************************************
+*******************************************************************************
 ** FUNCTION NAME: util_overlay_seed
 ** PURPOSE:       overlay the seed onto a probability image
 ** AUTHOR:        Keith Clarke
