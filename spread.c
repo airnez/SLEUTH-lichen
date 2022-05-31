@@ -736,7 +736,6 @@ temp4=RANDOM_FLOAT;
        */
       if (road_found)
       {
-		  spr_build_new_road(roads, (int) growth_row[growth_index], (int) growth_col[growth_index], i_rd_start, j_rd_start);
 		/*VerD*/
 
 		if (aux_diffusion_coeff  >= 0)
@@ -774,6 +773,7 @@ temp4=RANDOM_FLOAT;
                                 rt);                         /* IN/OUT */
           if (urbanized)
           {
+			spr_build_new_road(roads, (int)growth_row[growth_index], (int)growth_col[growth_index], i_rd_start, j_rd_start);
             max_tries = 3;
             for (tries = 0; tries < max_tries; tries++)
             {
