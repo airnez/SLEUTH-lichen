@@ -46,6 +46,9 @@ void mem_CloseLog();
 short *mem_GetGRCrowptr ();
 short *mem_GetGRCcolptr ();
 
+short *mem_GetRERCrowptr();
+short *mem_GetRERCcolptr();
+
 /* D.D. Added for cumulative growth array - 8/17/2006                */
 short *mem_GetGRZrowptr ();
 short *mem_GetGRZcolptr ();

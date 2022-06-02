@@ -110,6 +110,8 @@ static char mem_log_filename[MAX_FILENAME_LEN];
 /*      (RPO) arrays  --  July 28, 2006                                     */
 static void *g_row_ptr;
 static short *g_col_ptr;
+static short *road_expansion_row_ptr;
+static short *road_expansion_col_ptr;
 static short *z_row_ptr; /* D.D. 8/17/2006 Added for accumulating urban     */
 static short *z_col_ptr; /*      pixels over year simulations.              */
 static int   zgrwthcount;/*                                                 */
@@ -777,14 +779,17 @@ static void
 
   /** Allocate memory for the growth row arrays. **/
   g_row_ptr = malloc (bytes2allocateGRC);
+  // Allcoate memory for road expansion row array
+  road_expansion_row_ptr = malloc(bytes2allocateGRC);
+
 /* D.D. 8/24/2006 Allow Z to use twice the pixels of delta            ***
 ** when bytes2allocateGRC is less than 7,500,000.                     **/
   if (bytes2allocateGRC < 7500000) { z_row_ptr = malloc (2*bytes2allocateGRC); }
      else { z_row_ptr = malloc ( bytes2allocateGRC); }
 
-  if ( (g_row_ptr == NULL) || (z_row_ptr == NULL) )
+  if ( (g_row_ptr == NULL) || (z_row_ptr == NULL) || (road_expansion_row_ptr) == NULL)
   {
-    sprintf (msg_buf, "Unable to allocate %u bytes of memory (GRC row)", bytes2allocateGRC*3);
+    sprintf (msg_buf, "Unable to allocate %u bytes of memory (GRC row)", bytes2allocateGRC*4);
     LOG_ERROR (msg_buf);
     EXIT (1);
   }
@@ -798,13 +803,15 @@ static void
   
   /** Allocate memory for the growth col arrays. **/
   g_col_ptr = malloc (bytes2allocateGRC);
+  // Allcoate memory for road expansion col array
+  road_expansion_col_ptr = malloc(bytes2allocateGRC);
 /* D.D. 8/24/2006 Allow Z to use twice the pixels of delta            ***
 ** when bytes2allocateGRC is less than 7,500,000.                     **/
   if (bytes2allocateGRC < 7500000) { z_col_ptr = malloc (2*bytes2allocateGRC); }
      else { z_col_ptr = malloc ( bytes2allocateGRC); }
-  if ( (g_col_ptr == NULL) || (z_col_ptr == NULL) )
+  if ( (g_col_ptr == NULL) || (z_col_ptr == NULL) || (road_expansion_col_ptr) == NULL)
   {
-    sprintf (msg_buf, "Unable to allocate %u bytes of memory (GRC col)", bytes2allocateGRC*3);
+    sprintf (msg_buf, "Unable to allocate %u bytes of memory (GRC col)", bytes2allocateGRC*4);
     LOG_ERROR (msg_buf);
     EXIT (1);
   }
@@ -1142,6 +1149,40 @@ short*
   return g_col_ptr;
 }
 
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: mem_GetRERCrowptr
+** PURPOSE:       return a pointer to memory allocated for the RERC row array
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 06/02/2022
+** DESCRIPTION:   Returns a pointer to the starting memory location for the
+**                row array used to keep track of new expanded road pixels.
+**
+*/
+short*
+mem_GetRERCrowptr()
+{
+	return road_expansion_row_ptr;
+}
+
+
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: mem_GetRERCcolptr
+** PURPOSE:       return a pointer to memory allocated for the RERC col array
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 06/02/2022
+** DESCRIPTION:   Returns a pointer to the starting memory location for the
+**                column array used to keep track of new expanded road pixels.
+**
+*/
+short*
+mem_GetRERCcolptr()
+{
+	return road_expansion_col_ptr;
+}
 
 /******************************************************************************
 *******************************************************************************
