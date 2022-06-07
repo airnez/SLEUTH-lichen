@@ -1216,8 +1216,8 @@ static
 
 /******************************************************************************
 *******************************************************************************
-** FUNCTION NAME: spr_euclidean_distance()
-** PURPOSE:       returns the euclidean distance between two integer coordinates
+** FUNCTION NAME: spr_max_norm()
+** PURPOSE:       returns the max norm of the vector defined by given integer coordinates
 ** AUTHOR:        Irenee Dubourg
 ** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
 ** CREATION DATE: 06/02/2022
@@ -1225,11 +1225,10 @@ static
 **
 **
 */
-float
-spr_euclidean_distance(int x0, int y0, int x1, int y1)
+int
+spr_max_norm(int x0, int y0, int x1, int y1)
 {
-	return sqrt(pow(x1 - x0, 2)
-		+ pow(y1 - y0, 2) * 1.0);
+	return max(abs(x1-x0), abs(y1-y0));
 }
 
 /******************************************************************************
@@ -1373,11 +1372,11 @@ static
   if (foundN >= 0 && foundN <= N) {
 	  road_found = TRUE;
 	  //check if there is any closer road pixel in this iteration's expanded road pixels
-	  float minDistance = spr_euclidean_distance(foundRow, foundCol, i_grwth_center, j_grwth_center);
+	  int minDistance = spr_max_norm(foundRow, foundCol, i_grwth_center, j_grwth_center);
 	  for (int road_index = 0; road_index < road_expansion_count; road_index++) {
 		  int roadRow = road_expansion_row[road_index];
 		  int roadCol = road_expansion_col[road_index];
-		  float distanceToNewRoad = spr_euclidean_distance(roadRow, roadCol, i_grwth_center, j_grwth_center);
+		  int distanceToNewRoad = spr_max_norm(roadRow, roadCol, i_grwth_center, j_grwth_center);
 		  if (minDistance > distanceToNewRoad) {
 
 			  /*fprintf(stdout, "\nCloser new road pixel to (%i, %i) found, d(%i, %i)=%f instead of d(%i, %i)=%f \n", 
