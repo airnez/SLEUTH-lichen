@@ -387,7 +387,7 @@ static void
     for (col = 1; col < ncols - 1; col++)
     {
 ***                                                                         */
-  for (i=0; i< zgrwth_count; i++)
+  for (int i=0; i< zgrwth_count; i++)
     {
       row = zgrwth_row[i];
       col = zgrwth_col[i];
@@ -441,6 +441,53 @@ static void
 
 /******************************************************************************
 *******************************************************************************
+** FUNCTION NAME: spr_compute_line
+** PURPOSE:       Returns pixel coordinates drawing a line between input coordinates
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 06/07/2022
+** DESCRIPTION:
+**
+**
+*/
+static void
+spr_compute_line(	int pointA_row,		/* IN */
+					int pointA_col,		/* IN */
+					int pointB_row,		/* IN */
+					int pointB_col,		/* IN */
+					int *lineRow,		/* OUT */
+					int *lineCol,		/* OUT */
+					int *pixel_count	/* OUT */ )		
+{
+	char func[] = "spr_compute_line";
+	FUNC_INIT;
+
+	int x0, x1, y0, y1;
+	x0 = pointA_row;
+	y0 = pointA_col;
+	x1 = pointB_row;
+	y1 = pointB_col;
+	(*pixel_count) = 0;
+
+	// from http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#C
+	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	int err = (dx > dy ? dx : -dy) / 2, e2;
+
+	for (int i=0; TRUE; i++) {
+		lineRow[i] = x0;
+		lineCol[i] = y0;
+		(*pixel_count)++;
+		if (x0 == x1 && y0 == y1) break;
+		e2 = err;
+		if (e2 > -dx) { err -= dy; x0 += sx; }
+		if (e2 < dy) { err += dx; y0 += sy; }
+	}
+	FUNC_END;
+}
+
+/******************************************************************************
+*******************************************************************************
 ** FUNCTION NAME: spr_build_new_road
 ** PURPOSE:       creates a new road between two cells
 ** AUTHOR:        Irenee Dubourg
@@ -461,29 +508,29 @@ spr_build_new_road(GRID_P road_ptr, int cellRow, int cellCol, int roadRow, int r
 	PIXEL road_value = road_ptr[OFFSET(roadRow, roadCol)];
 	//PIXEL road_value = 100;
 
-	int x0, x1, y0, y1, roadStatePixelCount;
-	x0 = cellRow;
-	y0 = cellCol;
-	x1 = roadRow;
-	y1 = roadCol;
+	int roadStatePixelCount;
+	int *roadLineRowsPtr;
+	int *roadLineColsPtr;
+	int roadLinePixelCount;
+
+	roadLinePixelCount = 0;
+	roadLineRowsPtr = mem_GetroadLineRowsPtr();
+	roadLineColsPtr = mem_GetroadLineColsPtr();
+
+	spr_compute_line(cellRow, cellCol, roadRow, roadCol, roadLineRowsPtr, roadLineColsPtr, &roadLinePixelCount);
+
 	roadStatePixelCount = pgrid_GetRoadStatePixelCount();
 
-	// from http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#C
-	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-	int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-	int err = (dx > dy ? dx : -dy) / 2, e2;
+	for (int i=0; i< roadLinePixelCount; i++) {
+		int x = roadLineRowsPtr[i];
+		int y = roadLineColsPtr[i];
 
-	for (;;) {
-		road_ptr[OFFSET(x0, y0)] = road_value;
-		road_expansion_row[road_expansion_count] = x0;
-		road_expansion_col[road_expansion_count] = y0;
+		road_ptr[OFFSET(x, y)] = road_value;
+		road_expansion_row[road_expansion_count] = x;
+		road_expansion_col[road_expansion_count] = y;
 		road_expansion_count++;
-		if (x0 == x1 && y0 == y1) break;
-		e2 = err;
-		if (e2 > -dx) { err -= dy; x0 += sx; }
-		if (e2 < dy) { err += dx; y0 += sy; }
 	}
-	pgrid_SetRoadStatePixelCount(roadStatePixelCount + road_expansion_count);
+	pgrid_SetRoadStatePixelCount(roadStatePixelCount + roadLinePixelCount);
 	FUNC_END;
 }
 
@@ -1358,7 +1405,7 @@ static
 
               if ( (foundN < 0 && tfoundN > 0) || (foundN > 0 && tfoundN > 0 && tfoundN < foundN)) 
                    { foundN = tfoundN; foundRow = tfoundRow; foundCol = tfoundCol; }
-             }
+		}
 
         /** If the point found is in the current search band (n = srow) then
         this point is the closest road pixel to the search center

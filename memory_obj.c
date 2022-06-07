@@ -117,6 +117,8 @@ static short *z_col_ptr; /*      pixels over year simulations.              */
 static int   zgrwthcount;/*                                                 */
 static GRID_P zgrwthpointer;
 static int bytes2allocateGRC;
+static int *roadLineRows_ptr;
+static int *roadLineCols_ptr;
 
 static int bytes2allocateRPOcol;
 static short *rporowNum_ptr;
@@ -847,6 +849,10 @@ static void
 					__FILE__, __LINE__, 4*nrows*sizeof(short));
 			scen_CloseLog ();
 		}
+
+	/* Allocate memory for new road line pointer arrays*/
+		roadLineRows_ptr = malloc(nrows * sizeof(int));
+		roadLineCols_ptr = malloc(ncols * sizeof(int));
 }
 
 /******************************************************************************
@@ -1398,3 +1404,36 @@ GRID_P
   return zgrwthpointer;
 }
 
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: mem_GetroadLineRowsPtr
+** PURPOSE:       return a pointer to memory allocated for the new Road line rows array
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 06/07/2022
+** DESCRIPTION:   Returns a pointer to the starting memory location for the
+**				  array used to temporarly store a new road segment row coordinates
+**
+*/
+int*
+mem_GetroadLineRowsPtr()
+{
+	return roadLineRows_ptr;
+}
+
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: mem_GetroadLineRowsPtr
+** PURPOSE:       return a pointer to memory allocated for the new Road line cols array
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 06/07/2022
+** DESCRIPTION:   Returns a pointer to the starting memory location for the
+**				  array used to temporarly store a new road segment col coordinates
+**
+*/
+int*
+mem_GetroadLineColsPtr()
+{
+	return roadLineCols_ptr;
+}

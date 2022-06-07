@@ -67,5 +67,8 @@ short *mem_GetRPOcolptr ();
 
 /**  D.D.  Added for road-pixel-only (RPO) column arrays - Aug. 1, 2006    ***/
 void mem_AllocateRPOcol();
-/**  D.D.  Aug. 1, 2006                                                    ***/
+/**  D.D.  Aug. 1, 2006        
+                                            ***/
 
+int *mem_GetroadLineRowsPtr();
+int *mem_GetroadLineColsPtr();
