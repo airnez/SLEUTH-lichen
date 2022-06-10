@@ -104,8 +104,8 @@ float road_growth_diffusion_coefficient;
   static short *growth_col;
   
   static int road_expansion_count;
-  static short *road_expansion_row;
-  static short *road_expansion_col;
+  static int *road_expansion_row;
+  static int *road_expansion_col;
 
 /* The following two lines were replaced by D. Donato on 06/21/2006
 ****  D. Donato  Aug. 14, 2006                                              **/
@@ -477,7 +477,7 @@ spr_compute_line(	int pointA_row,		/* IN */
 	for (int i=0; TRUE; i++) {
 		lineRow[i] = x0;
 		lineCol[i] = y0;
-		(*pixel_count)++;
+		(*pixel_count) = i+1;
 		if (x0 == x1 && y0 == y1) break;
 		e2 = err;
 		if (e2 > -dx) { err -= dy; x0 += sx; }
@@ -532,6 +532,258 @@ spr_build_new_road(GRID_P road_ptr, int cellRow, int cellCol, int roadRow, int r
 	}
 	pgrid_SetRoadStatePixelCount(roadStatePixelCount + roadLinePixelCount);
 	FUNC_END;
+}
+
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: spr_isInConnectionRange
+** PURPOSE:       returns true if the given point corresponds to connection range based on newly created road segment
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 06/07/2022
+** DESCRIPTION:
+**
+**
+*/
+static BOOLEAN spr_isInConnectionRange(	int cellRow, int cellCol, int roadRow, int roadCol,
+											int connection_row, int connection_col) {
+	int vX = cellRow - roadRow;
+	int vY = cellCol - roadCol;
+	int wX = connection_row - cellRow;
+	int wY = connection_col - cellCol;
+	int dotProduct = vX * wX + vY * wY;
+	return (dotProduct >= 0);
+}
+
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: spr_max_norm()
+** PURPOSE:       returns the max norm of the vector defined by given integer coordinates
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 06/02/2022
+** DESCRIPTION:
+**
+**
+*/
+int
+spr_max_norm(int x0, int y0, int x1, int y1)
+{
+	return max(abs(x1 - x0), abs(y1 - y0));
+}
+
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: spr_road_interconnection
+** PURPOSE:       Look for a potential interconnection with a newly created road segment
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 06/07/2022
+** DESCRIPTION: Based on spr_road_search code (copied and modified code)
+**
+**
+*/
+static BOOLEAN
+spr_road_interconnection(GRID_P roads,		/* IN  */
+	int new_growth_cell_row,					/* IN  */
+	int new_growth_cell_col,					/*	IN	*/
+	int connected_road_row,                     /* IN     */
+	int connected_road_col,                     /* IN     */
+	int *interconnection_road_row,                              /* OUT    */
+	int *interconnection_road_col,                              /* OUT    */
+	int max_search_index                     /* IN     */)
+{
+	char func[] = "spr_road_search";
+	int i;
+	int j;
+	int i_offset;
+	int j_offset;
+	BOOLEAN road_found = FALSE;
+	BOOLEAN isInConnectionRange = FALSE;
+	int srch_index;
+	/***                          D.D. July 28, 2006               (Begin)       **/
+	/***  New variables for the new road-search algorithm                        **/
+	BOOLEAN bn_found;
+	int bn, tcount, total, N, k, kmax, kmin, ktest, n, r;
+	int crow, ccol, trow, brow, lcol, rcol, nrows, ncols, srow;
+	FILE *DD01DBG;
+	/*******************          D.D. July 28, 2006      (End)  ******************/
+	FUNC_INIT;
+	assert(interconnection_road_row != NULL);
+	assert(interconnection_road_col != NULL);
+	assert(max_search_index >= 0);
+
+	/***                          D.D. July 28, 2006               (Begin)       **/
+	/***  Set the variables to define the search area.                           **/
+	nrows = igrid_GetNumRows();
+	ncols = igrid_GetNumCols();
+	crow = new_growth_cell_row;
+	ccol = new_growth_cell_col;
+	/*** Find the maximal search radius bn. Set N = bn. ***/
+	N = MAX(max_search_index, nrows);
+	N = MAX(max_search_index, ncols);
+	n = ((int)(sqrt((float)(N / 4))) - 1);/** Choose an efficient starting   **/
+	if (n < 1) { n = 1; }                    /** value for iteration to find bn.**/
+	bn_found = FALSE;
+	for (bn = n; bn < MAX(ncols, nrows); bn++)
+	{
+		total = 4 * ((1 + bn) * bn);
+		if (total > N)
+		{
+			bn_found = TRUE;
+			break;
+		}
+	}
+	if (!bn_found)
+	{
+		sprintf(msg_buf, "Unable to find road search band bn in new RS algorithm.");
+		LOG_ERROR(msg_buf);
+		EXIT(1);
+	}
+	else
+	{
+		N = bn;
+	}
+
+	///* Compute road interconnection search area*/
+	//int *lineRow = mem_GetroadLineRowsPtr();
+	//int *lineCol = mem_GetroadLineColsPtr();
+	//int linePixelCount;
+	//int dir_x, dir_y;
+	//spr_road_interconnection_area(new_growth_cell_row, new_growth_cell_col, connected_road_row, connected_road_col,
+	//	N, lineRow, lineCol, &linePixelCount, &dir_x, &dir_y);
+
+	/** Set trow, brow, lcol, and rcol based on N. **/
+	if (crow >= N) { trow = crow - N; }
+	else { trow = 0; }
+	if (crow <= (nrows - 1 - N)) { brow = crow + N; }
+	else { brow = nrows - 1; }
+	if (ccol >= N) { lcol = ccol - N; }
+	else { lcol = 0; }
+	if (ccol <= ncols - 1 - N) { rcol = ccol + N; }
+	else { rcol = ncols - 1; }
+
+
+	/*******************          D.D. July 28, 2006      (End)  ******************/
+
+	/***                          D.D. July 28, 2006               (Begin)       **/
+	/***  Search for road pixels                                                 **/
+
+	foundN = -1;   /** Set the "road-pixel-found" indicator to "none found". **/
+
+	for (srow = 0; srow <= N; srow++)
+	{
+		tfoundN = -1;  /** Pre-set the temporary indicator to "not found". **/
+
+		for (i = 1; i <= 2; i++)  /** Process the rows srow above and srow below crow. **/
+		{
+			if (i == 1) { r = crow - srow; }
+			else { r = crow + srow; }
+			/** Process the first row containing the search center only once.     **/
+			if (srow == 0 && i == 2) { break; }
+
+			/** Don't waste time processing a row if it is above or below the
+				search area; if it  contains no road pixels; or if there is no
+				overlap between the section with road pixels and the search area. **/
+
+			if (r < trow || r > brow) { continue; }
+			if (rporow_ptrNum[r] == 0) { continue; }
+			if (rporow_ptrMin[r] > rcol) { continue; }
+			if (rporow_ptrMax[r] < lcol) { continue; }
+
+			/** Perform a binary search to find the road pixel in this row
+				which is closest to the search center.                            **/
+
+			kmin = 0; kmax = rporow_ptrNum[r] - 1;
+			tcount = 0;
+			while ((kmax - kmin) > 1)
+			{
+				ktest = (kmax + kmin) / 2;
+				if (WCOL(r, ktest) <= ccol) { kmin = ktest; }
+				else { kmax = ktest; }
+				tcount++;
+			}
+
+			if ((WCOL(r, kmax) - ccol) < (ccol - WCOL(r, kmin)))
+			{
+				k = kmax;
+			}
+			else { k = kmin; }
+			tfoundN = MAX(srow, abs(WCOL(r, k) - ccol));
+			tfoundRow = r; tfoundCol = WCOL(r, k);
+
+			/** Now save the best point found in this row if it is
+				closer to the center than the previous best point. ***/
+			isInConnectionRange = spr_isInConnectionRange(new_growth_cell_row, new_growth_cell_col, connected_road_row, connected_road_col,
+				tfoundRow, tfoundCol);
+			if (((foundN < 0 && tfoundN > 0) || (foundN > 0 && tfoundN > 0 && tfoundN < foundN)) && isInConnectionRange)
+			{
+				foundN = tfoundN; foundRow = tfoundRow; foundCol = tfoundCol;
+			}
+		}
+
+		/** If the point found is in the current search band (n = srow) then
+		this point is the closest road pixel to the search center
+		and there is no need to continue iterating through the remaining
+		rows.                                                            ***/
+
+		if (foundN == srow) { break; }
+	}
+
+	//Check if it is inside searching area
+	isInConnectionRange = spr_isInConnectionRange(new_growth_cell_row, new_growth_cell_col, connected_road_row, connected_road_col,
+		foundRow, foundCol);
+
+	if (foundN >= 0 && foundN <= N && isInConnectionRange) {
+		road_found = TRUE;
+		//check if there is any closer road pixel in this iteration's expanded road pixels
+		int minDistance = spr_max_norm(foundRow, foundCol, new_growth_cell_row, new_growth_cell_col);
+		for (int road_index = 0; road_index < road_expansion_count; road_index++) {
+			int roadRow = road_expansion_row[road_index];
+			int roadCol = road_expansion_col[road_index];
+			int distanceToNewRoad = spr_max_norm(roadRow, roadCol, new_growth_cell_row, new_growth_cell_col);
+			isInConnectionRange = spr_isInConnectionRange(new_growth_cell_row, new_growth_cell_col, connected_road_row, connected_road_col,
+				roadRow, roadCol);
+
+			if (minDistance > distanceToNewRoad && isInConnectionRange && distanceToNewRoad != 0) {
+
+				/*fprintf(stdout, "\nCloser new road pixel to (%i, %i) found, d(%i, %i)=%f instead of d(%i, %i)=%f \n",
+					i_grwth_center, j_grwth_center,
+					roadRow, roadCol, distanceToNewRoad,
+					foundRow, foundCol, minDistance);*/
+
+				foundRow = roadRow;
+				foundCol = roadCol;
+				minDistance = distanceToNewRoad;
+			}
+		}
+		/*fprintf(stdout, "Found interconnection. row = %i, col = %i.\n", foundRow, foundCol);*/
+	}
+
+	(*interconnection_road_row) = foundRow;  (*interconnection_road_col) = foundCol;
+
+	FUNC_END;
+	return road_found;
+}
+
+/******************************************************************************
+*******************************************************************************
+** FUNCTION NAME: spr_is_road_suitable
+** PURPOSE:       true if the road passes the suitability filtering and should be build
+** AUTHOR:        Irenee Dubourg
+** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
+** CREATION DATE: 06/08/2022
+** DESCRIPTION:
+**
+**
+*/
+BOOLEAN
+spr_is_road_suitable(int cellRow, int cellCol, int roadRow, int roadCol)
+{
+	int nrows = igrid_GetNumRows();
+	int ncols = igrid_GetNumCols();
+	BOOLEAN long_enough = (spr_max_norm(cellRow, cellCol, roadRow, roadCol) >= (int)(max(nrows, ncols)/40.0));
+	return long_enough;
 }
 
 /******************************************************************************
@@ -591,6 +843,7 @@ static void
   int max_tries;
   BOOLEAN spread;
   BOOLEAN urbanized;
+  BOOLEAN connectable;
   int i_rd_end;
   int j_rd_end;
   int i_rd_end_nghbr;
@@ -798,7 +1051,17 @@ temp4=RANDOM_FLOAT;
                                 rt);                         /* IN/OUT */
           if (urbanized)
           {
-			spr_build_new_road(roads, (int)growth_row[growth_index], (int)growth_col[growth_index], i_rd_start, j_rd_start);
+			  int cellRow = (int)growth_row[growth_index];
+			  int cellCol = (int)growth_col[growth_index];
+			if (spr_is_road_suitable(cellRow, cellCol, i_rd_start, j_rd_start)) {
+				spr_build_new_road(roads, cellRow, cellCol, i_rd_start, j_rd_start);
+				int connectionRow, connectionCol;
+				 connectable = spr_road_interconnection(roads, cellRow, cellCol, i_rd_start, j_rd_start,
+					&connectionRow, &connectionCol, max_search_index);
+				if (connectable) {
+					spr_build_new_road(roads, cellRow, cellCol, connectionRow, connectionCol);
+				}
+			}
             max_tries = 3;
             for (tries = 0; tries < max_tries; tries++)
             {
@@ -1263,23 +1526,6 @@ static
 
 /******************************************************************************
 *******************************************************************************
-** FUNCTION NAME: spr_max_norm()
-** PURPOSE:       returns the max norm of the vector defined by given integer coordinates
-** AUTHOR:        Irenee Dubourg
-** PROGRAMMER:    Irenee Dubourg, ESTP Institut de Recherche en Constructibilite
-** CREATION DATE: 06/02/2022
-** DESCRIPTION:
-**
-**
-*/
-int
-spr_max_norm(int x0, int y0, int x1, int y1)
-{
-	return max(abs(x1-x0), abs(y1-y0));
-}
-
-/******************************************************************************
-*******************************************************************************
 ** FUNCTION NAME: spr_road_search
 ** PURPOSE:       perform road search
 ** AUTHOR:        David I. Donato
@@ -1424,7 +1670,7 @@ static
 		  int roadRow = road_expansion_row[road_index];
 		  int roadCol = road_expansion_col[road_index];
 		  int distanceToNewRoad = spr_max_norm(roadRow, roadCol, i_grwth_center, j_grwth_center);
-		  if (minDistance > distanceToNewRoad) {
+		  if (minDistance > distanceToNewRoad && distanceToNewRoad != 0) {
 
 			  /*fprintf(stdout, "\nCloser new road pixel to (%i, %i) found, d(%i, %i)=%f instead of d(%i, %i)=%f \n", 
 				  i_grwth_center, j_grwth_center,

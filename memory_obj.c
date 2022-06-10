@@ -110,13 +110,14 @@ static char mem_log_filename[MAX_FILENAME_LEN];
 /*      (RPO) arrays  --  July 28, 2006                                     */
 static void *g_row_ptr;
 static short *g_col_ptr;
-static short *road_expansion_row_ptr;
-static short *road_expansion_col_ptr;
+static int *road_expansion_row_ptr;
+static int *road_expansion_col_ptr;
 static short *z_row_ptr; /* D.D. 8/17/2006 Added for accumulating urban     */
 static short *z_col_ptr; /*      pixels over year simulations.              */
 static int   zgrwthcount;/*                                                 */
 static GRID_P zgrwthpointer;
 static int bytes2allocateGRC;
+static int bytes2allocateRERC;
 static int *roadLineRows_ptr;
 static int *roadLineCols_ptr;
 
@@ -413,9 +414,16 @@ void
 /*        Allows for up to half the pixels in a grid to be used for new     ***/
 /*        growth pixels or 15,000,000 - whichever is less.   (8/17/2006)       ***/
 /*   D.D. Type of storage to be allocated changed from int to short 8/10/2006 */
-  if (bytes_p_grid_rounded2wordboundary/2 > 15000000) {bytes2allocateGRC=15000000*sizeof(short);}
+  if (bytes_p_grid_rounded2wordboundary/2 > 15000000) {
+	  bytes2allocateGRC=15000000*sizeof(short);
+	  bytes2allocateRERC = 15000000 * sizeof(int);
+
+  }
       else
-  {bytes2allocateGRC = (bytes_p_grid_rounded2wordboundary/2)*sizeof(short);}
+  {
+	  bytes2allocateGRC = (bytes_p_grid_rounded2wordboundary/2)*sizeof(short);
+	  bytes2allocateRERC = (bytes_p_grid_rounded2wordboundary / 2) * sizeof(int);
+  }
 
 #endif
   mem_check_size = 1;
@@ -782,7 +790,7 @@ static void
   /** Allocate memory for the growth row arrays. **/
   g_row_ptr = malloc (bytes2allocateGRC);
   // Allcoate memory for road expansion row array
-  road_expansion_row_ptr = malloc(bytes2allocateGRC);
+  road_expansion_row_ptr = malloc(bytes2allocateRERC);
 
 /* D.D. 8/24/2006 Allow Z to use twice the pixels of delta            ***
 ** when bytes2allocateGRC is less than 7,500,000.                     **/
@@ -791,7 +799,7 @@ static void
 
   if ( (g_row_ptr == NULL) || (z_row_ptr == NULL) || (road_expansion_row_ptr) == NULL)
   {
-    sprintf (msg_buf, "Unable to allocate %u bytes of memory (GRC row)", bytes2allocateGRC*4);
+	  sprintf (msg_buf, "Unable to allocate %u bytes of memory (GRC row)", bytes2allocateGRC*3 + bytes2allocateRERC);
     LOG_ERROR (msg_buf);
     EXIT (1);
   }
@@ -806,14 +814,14 @@ static void
   /** Allocate memory for the growth col arrays. **/
   g_col_ptr = malloc (bytes2allocateGRC);
   // Allcoate memory for road expansion col array
-  road_expansion_col_ptr = malloc(bytes2allocateGRC);
+  road_expansion_col_ptr = malloc(bytes2allocateRERC);
 /* D.D. 8/24/2006 Allow Z to use twice the pixels of delta            ***
 ** when bytes2allocateGRC is less than 7,500,000.                     **/
   if (bytes2allocateGRC < 7500000) { z_col_ptr = malloc (2*bytes2allocateGRC); }
      else { z_col_ptr = malloc ( bytes2allocateGRC); }
   if ( (g_col_ptr == NULL) || (z_col_ptr == NULL) || (road_expansion_col_ptr) == NULL)
   {
-    sprintf (msg_buf, "Unable to allocate %u bytes of memory (GRC col)", bytes2allocateGRC*4);
+    sprintf (msg_buf, "Unable to allocate %u bytes of memory (GRC col)", bytes2allocateGRC*3 + bytes2allocateRERC);
     LOG_ERROR (msg_buf);
     EXIT (1);
   }
@@ -1166,7 +1174,7 @@ short*
 **                row array used to keep track of new expanded road pixels.
 **
 */
-short*
+int*
 mem_GetRERCrowptr()
 {
 	return road_expansion_row_ptr;
@@ -1184,7 +1192,7 @@ mem_GetRERCrowptr()
 **                column array used to keep track of new expanded road pixels.
 **
 */
-short*
+int*
 mem_GetRERCcolptr()
 {
 	return road_expansion_col_ptr;
