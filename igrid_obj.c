@@ -1319,7 +1319,7 @@ static void
     this_year = atoi (this_year_str);
     if (proc_GetProcessingType () == PREDICTING)
     {
-      if ((this_year >= start_year) | (i = scen_GetRoadDataFileCount () - 1))
+      if ((this_year >= start_year) || (i == scen_GetRoadDataFileCount () - 1))
       {
         strcpy (igrid.road[j].filename, scen_GetInputDir ());
         strcat (igrid.road[j].filename, scen_GetRoadDataFilename (i));
