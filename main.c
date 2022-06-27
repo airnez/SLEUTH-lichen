@@ -447,10 +447,11 @@ int
 
 		if (WriteRatioFileFlag == 1)
 		{
-			sprintf(fname,"%sratio_pe_%u.log",scen_GetOutputDir(), glb_mype);
+			sprintf(fname,"%sratio_pe_%u.csv",scen_GetOutputDir(), glb_mype);
 			fpVerD4 =fopen(fname, "w");
 		}
 	}
+
 
 	/*VerD*/
 
