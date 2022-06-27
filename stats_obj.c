@@ -2284,48 +2284,49 @@ static void
 		{
 			if (proc_GetCurrentRun()  == 0 )
 			{
-				fprintf(fpVerD4,	"run ");
-				fprintf(fpVerD4,	"diffusion ");
-				fprintf(fpVerD4,	"breed ");
-				fprintf(fpVerD4,	"spread ");
-				fprintf(fpVerD4,	"slp_resst ");
-				fprintf(fpVerD4,	"road_grav ");
-				fprintf(fpVerD4,	"control ");
-				fprintf(fpVerD4,	"area area area ");
-				fprintf(fpVerD4,	"edges edges edges ");
-				fprintf(fpVerD4,	"cluster cluster cluster ");
-				fprintf(fpVerD4,	"pop pop pop ");
-				fprintf(fpVerD4,	"xmean xmean xmean ");
-				fprintf(fpVerD4,	"ymean ymean ymean ");
-				fprintf(fpVerD4,	"radius radius radius ");
-				fprintf(fpVerD4,	"avg_slope avg_slope avg_slope ");
-				fprintf(fpVerD4,	"mn_cl_sz mn_cl_sz mn_cl_sz ");
-				fprintf(fpVerD4,	"pct_urban pct_urban pct_urban ");
-				fprintf(fpVerD4,	"\n");
-
-				fprintf(fpVerD4,	"number ");
-				fprintf(fpVerD4,	"coeff ");
-				fprintf(fpVerD4,	"coeff ");
-				fprintf(fpVerD4,	"coeff ");
-				fprintf(fpVerD4,	"coeff ");
-				fprintf(fpVerD4,	"coeff ");
-				fprintf(fpVerD4,	"year ");
-				fprintf(fpVerD4,	"diff ratio fract ");
-				fprintf(fpVerD4,	"diff ratio fract ");
-				fprintf(fpVerD4,	"diff ratio fract ");
-				fprintf(fpVerD4,	"diff ratio fract ");
-				fprintf(fpVerD4,	"diff ratio fract ");
-				fprintf(fpVerD4,	"diff ratio fract ");
-				fprintf(fpVerD4,	"diff ratio fract ");
-				fprintf(fpVerD4,	"diff ratio fract ");
-				fprintf(fpVerD4,	"diff ratio fract ");
-				fprintf(fpVerD4,	"diff ratio fract ");
+				fprintf(fpVerD4,	"run_number, ");
+				fprintf(fpVerD4,	"diffusion_coeff, ");
+				fprintf(fpVerD4,	"breed_coeff, ");
+				fprintf(fpVerD4,	"spread_coeff, ");
+				fprintf(fpVerD4,	"slp_resst_coeff, ");
+				fprintf(fpVerD4,	"road_grav_coeff, ");
+				fprintf(fpVerD4,	"control_year, ");
+				fprintf(fpVerD4,	"area_diff, ");
+				fprintf(fpVerD4,	"area_ratio, ");
+				fprintf(fpVerD4,	"area_fract, ");
+				fprintf(fpVerD4,	"edges_diff, ");
+				fprintf(fpVerD4,	"edges_ratio, ");
+				fprintf(fpVerD4,	"edges_fract, ");
+				fprintf(fpVerD4,	"cluster_diff, ");
+				fprintf(fpVerD4,	"cluster_ratio, ");
+				fprintf(fpVerD4,	"cluster_fract, ");
+				fprintf(fpVerD4,	"pop_diff, ");
+				fprintf(fpVerD4,	"pop_ratio, ");
+				fprintf(fpVerD4,	"pop_fract, ");
+				fprintf(fpVerD4,	"xmean_diff, ");
+				fprintf(fpVerD4,	"xmean_ratio, ");
+				fprintf(fpVerD4,	"xmean_fract, ");
+				fprintf(fpVerD4,	"ymean_diff, ");
+				fprintf(fpVerD4,	"ymean_ratio, ");
+				fprintf(fpVerD4,	"ymean_fract, ");
+				fprintf(fpVerD4,	"radius_diff, ");
+				fprintf(fpVerD4,	"radius_ratio, ");
+				fprintf(fpVerD4,	"radius_fract, ");
+				fprintf(fpVerD4,	"avg_slope_diff, ");
+				fprintf(fpVerD4,	"avg_slope_ratio, ");
+				fprintf(fpVerD4,	"avg_slope_fract, ");
+				fprintf(fpVerD4,	"mn_cl_sz_diff, ");
+				fprintf(fpVerD4,	"mn_cl_sz_ratio, ");
+				fprintf(fpVerD4,	"mn_cl_sz_fract, ");
+				fprintf(fpVerD4,	"pct_urban_diff, ");
+				fprintf(fpVerD4,	"pct_urban_ratio, ");
+				fprintf(fpVerD4,	"pct_urban_fract");
 				fprintf(fpVerD4,	"\n");
 			}
 
 			for (i = 1; i <= nobs; i++)
 			{
-				fprintf (fpVerD4,"%d %10.4f %10.4f %10.4f %10.4f %10.4f ",
+				fprintf (fpVerD4,"%d, %10.4f, %10.4f, %10.4f, %10.4f, %10.4f, ",
 							proc_GetCurrentRun (),
 							coeff_GetSavedDiffusion(),
 							coeff_GetSavedBreed(),
@@ -2340,54 +2341,54 @@ static void
 				DDD = average[i].area - stats_actual[i].area;
 				if  (stats_actual[i].area == 0)   RRR = 0;	
 				else   RRR = average[i].area / stats_actual[i].area;
-				fprintf(fpVerD4,"%d %f %f %f   ",igrid_GetUrbanYear(i), DDD, RRR, RRR-1 );
+				fprintf(fpVerD4,"%d, %f, %f, %f, ",igrid_GetUrbanYear(i), DDD, RRR, RRR-1 );
     
 				DDD = average[i].edges - stats_actual[i].edges;	
 				if  (stats_actual[i].edges == 0)   RRR = 0;
 				else   RRR = average[i].edges / stats_actual[i].edges;
-				fprintf(fpVerD4,"%f %f %f   ", DDD, RRR, RRR-1 );
+				fprintf(fpVerD4,"%f, %f, %f, ", DDD, RRR, RRR-1 );
     
 				DDD = average[i].clusters - stats_actual[i].clusters;
 				if  (stats_actual[i].clusters == 0)   RRR = 0;
 				else   RRR = average[i].clusters / stats_actual[i].clusters;
-				fprintf(fpVerD4,"%f %f %f   ", DDD, RRR, RRR-1 );
+				fprintf(fpVerD4,"%f, %f, %f, ", DDD, RRR, RRR-1 );
     
 				DDD = average[i].pop - stats_actual[i].pop;
 				if  (stats_actual[i].pop == 0)   RRR = 0;
 				else   RRR = average[i].pop / stats_actual[i].pop;
-				fprintf(fpVerD4,"%f %f %f   ", DDD, RRR, RRR-1 );
+				fprintf(fpVerD4,"%f, %f, %f, ", DDD, RRR, RRR-1 );
     
 				DDD = average[i].xmean - stats_actual[i].xmean;
 				if  (stats_actual[i].xmean == 0)   RRR = 0;
 				else   RRR = average[i].xmean / stats_actual[i].xmean;
-				fprintf(fpVerD4,"%f %f %f   ", DDD, RRR, RRR-1 );
+				fprintf(fpVerD4,"%f, %f, %f, ", DDD, RRR, RRR-1 );
     
 				DDD = average[i].ymean - stats_actual[i].ymean;
 				if  (stats_actual[i].ymean == 0)   RRR = 0;
 				else   RRR = average[i].ymean / stats_actual[i].ymean;
-				fprintf(fpVerD4,"%f %f %f   ", DDD, RRR, RRR-1 );
+				fprintf(fpVerD4,"%f, %f, %f, ", DDD, RRR, RRR-1 );
     
 				DDD = average[i].rad - stats_actual[i].rad;
 				if  (stats_actual[i].rad == 0)   RRR = 0;
 				else   RRR = average[i].rad / stats_actual[i].rad;
-				fprintf(fpVerD4,"%f %f %f   ", DDD, RRR, RRR-1 );
+				fprintf(fpVerD4,"%f, %f, %f, ", DDD, RRR, RRR-1 );
     
 				DDD = average[i].slope - stats_actual[i].average_slope;
 				if  (stats_actual[i].average_slope == 0)   RRR = 0;
 				else   RRR = average[i].slope / stats_actual[i].average_slope;
-				fprintf(fpVerD4,"%f %f %f   ", DDD, RRR, RRR-1 );
+				fprintf(fpVerD4,"%f, %f, %f, ", DDD, RRR, RRR-1 );
     
 				DDD = average[i].mean_cluster_size - stats_actual[i].mean_cluster_size;
 				if  (stats_actual[i].mean_cluster_size == 0)   RRR = 0;
 				else   RRR = average[i].mean_cluster_size / stats_actual[i].mean_cluster_size;
-				fprintf(fpVerD4,"%f %f %f   ", DDD, RRR, RRR-1 );
+				fprintf(fpVerD4,"%f, %f, %f, ", DDD, RRR, RRR-1 );
     
 				DDD = average[i].percent_urban - stats_actual[i].percent_urban;
 				if  (stats_actual[i].percent_urban == 0)   RRR = 0;
 				else   RRR = average[i].percent_urban / stats_actual[i].percent_urban;
-				fprintf(fpVerD4,"%f %f %f   ", DDD, RRR, RRR-1 );
+				fprintf(fpVerD4,"%f, %f, %f ", DDD, RRR, RRR-1 );
 
-				fprintf(fpVerD4,	"\n");
+				fprintf(fpVerD4, "\n");
 			}
 		}
 
