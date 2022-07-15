@@ -1861,7 +1861,7 @@ void
 
   if (proc_GetProcessingType () != PREDICTING)
   {
-    sprintf (cntrl_filename, "%scontrol_stats_pe_%u.log", output_dir, glb_mype);
+    sprintf (cntrl_filename, "%scontrol_stats_pe_%u.csv", output_dir, glb_mype);
     if (!control_stats_log_created)
     {
       stats_CreateControlFile (cntrl_filename);
@@ -2001,11 +2001,10 @@ void
 static void
   stats_LogControlStatsHdr (FILE * fp)
 {
-  fprintf (fp, "                                               Cluster\n");
-  fprintf (fp, "  Run  Product Compare     Pop   Edges Clusters   ");
-  fprintf (fp, "Size Leesalee  Slope ");
-  fprintf (fp, " %%Urban   Xmean   Ymean     Rad  Fmatch ");
-  fprintf (fp, "Diff  Brd Sprd  Slp   RG\n");
+  fprintf (fp, "Run,Product,Compare,Pop,Edges,Clusters,");
+  fprintf (fp, "Size,Leesalee,Slope,");
+  fprintf (fp, "%%Urban,Xmean,Ymean,Rad,Fmatch,OSM,");
+  fprintf (fp, "Diff,Brd,Sprd,Slp,RG\n");
 }
 /******************************************************************************
 *******************************************************************************
@@ -2021,7 +2020,8 @@ static void
 static void
   stats_LogControlStats (FILE * fp)
 {
-  fprintf (fp, "%5u %8.5f %7.5f %7.5f %7.5f %7.5f %7.5f %7.5f %7.5f %7.5f ",
+	float osm = aggregate.compare * regression.edges * regression.clusters * regression.average_slope * regression.xmean * regression.ymean;
+  fprintf (fp, "%5u,%8.5f,%7.5f,%7.5f,%7.5f,%7.5f,%7.5f,%7.5f,%7.5f,%7.5f,",
            proc_GetCurrentRun (),
            aggregate.product,
            aggregate.compare,
@@ -2032,11 +2032,12 @@ static void
            aggregate.leesalee,
            regression.average_slope,
            regression.percent_urban);
-  fprintf (fp, "%7.5f %7.5f %7.5f %7.5f %4.0f %4.0f %4.0f %4.0f %4.0f\n",
+  fprintf (fp, "%7.5f,%7.5f,%7.5f,%7.5f,%7.5f,%4.0f,%4.0f,%4.0f,%4.0f,%4.0f\n",
            regression.xmean,
            regression.ymean,
            regression.rad,
            aggregate.fmatch,
+		   osm,
            coeff_GetSavedDiffusion (),
            coeff_GetSavedBreed (),
            coeff_GetSavedSpread (),
